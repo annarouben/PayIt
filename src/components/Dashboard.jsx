@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import RiskActionPlan from './RiskActionPlan';
+import MessageComposer from './MessageComposer';
 
 const Dashboard = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
+  const [messageModal, setMessageModal] = useState({
+    isOpen: false,
+    invoice: null,
+    messageType: null
+  });
 
   const handleRiskClick = (invoice) => {
     setSelectedInvoice(invoice);
@@ -14,8 +20,167 @@ const Dashboard = () => {
     setIsRiskModalOpen(false);
     setSelectedInvoice(null);
   };
+
+  const handleSendMessage = (invoice, messageType) => {
+    setMessageModal({
+      isOpen: true,
+      invoice,
+      messageType
+    });
+  };
+
+  const closeMessageModal = () => {
+    setMessageModal({
+      isOpen: false,
+      invoice: null,
+      messageType: null
+    });
+  };
+
+  const [invoices, setInvoices] = useState([
+    {
+      id: 1,
+      customerName: "Johnson",
+      customerPhone: "(555) 123-4567",
+      amount: 150,
+      status: "overdue",
+      daysOverdue: 3,
+      jobDescription: "Kitchen sink repair",
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 2,
+      customerName: "Davis",
+      customerPhone: "(555) 234-5678",
+      amount: 320,
+      status: "overdue",
+      daysOverdue: 7,
+      jobDescription: "Water heater replacement",
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 3,
+      customerName: "Smith",
+      customerPhone: "(555) 345-6789",
+      amount: 275,
+      status: "due",
+      daysDue: 2,
+      jobDescription: "Bathroom plumbing",
+      riskLevel: "high",
+      notifications: [
+        { type: "auto", sent: "2025-08-06", message: "Early reminder sent (customer typically pays 3-5 days late)" }
+      ],
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 4,
+      customerName: "Brown",
+      customerPhone: "(555) 456-7890",
+      amount: 185,
+      status: "due",
+      daysDue: 5,
+      jobDescription: "Pipe leak repair",
+      riskLevel: "high",
+      notifications: [
+        { type: "auto", sent: "2025-08-05", message: "Proactive reminder sent (history of late payments)" }
+      ],
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 5,
+      customerName: "Miller",
+      customerPhone: "(555) 567-8901",
+      amount: 95,
+      status: "due",
+      daysDue: 1,
+      jobDescription: "Faucet replacement",
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 6,
+      customerName: "Williams",
+      customerPhone: "(555) 678-9012",
+      amount: 120,
+      status: "paid",
+      paidDate: "Today",
+      jobDescription: "Toilet installation",
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 7,
+      customerName: "Wilson",
+      customerPhone: "(555) 789-0123",
+      amount: 450,
+      status: "paid",
+      paidDate: "Yesterday",
+      jobDescription: "Full bathroom renovation",
+      reviewRequestSent: true,
+      reviewStatus: "pending"
+    },
+    {
+      id: 8,
+      customerName: "Garcia",
+      customerPhone: "(555) 890-1234",
+      amount: 85,
+      status: "paid",
+      paidDate: "2 days ago",
+      jobDescription: "Garbage disposal fix",
+      reviewRequestSent: false,
+      reviewStatus: null
+    },
+    {
+      id: 9,
+      customerName: "Martinez",
+      customerPhone: "(555) 901-2345",
+      amount: 225,
+      status: "paid",
+      paidDate: "3 days ago",
+      jobDescription: "Shower installation",
+      reviewRequestSent: true,
+      reviewStatus: "completed"
+    }
+  ]);
+
+  const handleMessageSent = (invoiceId, messageType, phoneNumber) => {
+    setInvoices(prevInvoices => 
+      prevInvoices.map(invoice => {
+        if (invoice.id === invoiceId) {
+          const updatedInvoice = { ...invoice };
+          const today = new Date().toISOString().split('T')[0];
+          
+          if (messageType === 'payment-reminder') {
+            // Add to notifications array
+            if (!updatedInvoice.notifications) {
+              updatedInvoice.notifications = [];
+            }
+            updatedInvoice.notifications.push({
+              type: "manual",
+              sent: today,
+              message: "Payment reminder sent via text"
+            });
+            // Update phone number if changed
+            updatedInvoice.customerPhone = phoneNumber;
+          } else if (messageType === 'review-request') {
+            updatedInvoice.reviewRequestSent = true;
+            updatedInvoice.reviewStatus = "pending";
+            updatedInvoice.customerPhone = phoneNumber;
+          }
+          
+          return updatedInvoice;
+        }
+        return invoice;
+      })
+    );
+  };
+
   // Sample invoice data - in real app this would come from an API/database
-  const invoices = [
+  const invoicesOld = [
     {
       id: 1,
       customerName: "Johnson",
@@ -240,12 +405,44 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                {/* Action Button - Different text based on notification history */}
-                <button className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors">
-                  {invoice.notifications && invoice.notifications.length > 0 
-                    ? "Send Follow-up Text" 
-                    : "Send Text Reminder"}
-                </button>
+                {/* Action Button - Different based on invoice status and review status */}
+                {invoice.status === 'paid' ? (
+                  // Paid invoices - show review request buttons
+                  invoice.reviewRequestSent ? (
+                    invoice.reviewStatus === 'completed' ? (
+                      <div className="w-full flex items-center justify-center text-green-600 font-medium py-3 px-4 bg-green-50 rounded-lg">
+                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                        </svg>
+                        Review Received
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => handleSendMessage(invoice, 'review-request')}
+                        className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors"
+                      >
+                        Resend Review Request
+                      </button>
+                    )
+                  ) : (
+                    <button 
+                      onClick={() => handleSendMessage(invoice, 'review-request')}
+                      className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors"
+                    >
+                      Request Review
+                    </button>
+                  )
+                ) : (
+                  // Unpaid invoices - show payment reminder buttons
+                  <button 
+                    onClick={() => handleSendMessage(invoice, 'payment-reminder')}
+                    className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors"
+                  >
+                    {invoice.notifications && invoice.notifications.length > 0 
+                      ? "Send Follow-up Text" 
+                      : "Send Text Reminder"}
+                  </button>
+                )}
               </div>
             );
           })}
@@ -257,6 +454,15 @@ const Dashboard = () => {
         invoice={selectedInvoice}
         isOpen={isRiskModalOpen}
         onClose={closeRiskModal}
+      />
+
+      {/* Message Composer Modal */}
+      <MessageComposer
+        invoice={messageModal.invoice}
+        messageType={messageModal.messageType}
+        isOpen={messageModal.isOpen}
+        onClose={closeMessageModal}
+        onSent={handleMessageSent}
       />
     </div>
   );
