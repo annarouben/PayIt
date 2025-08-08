@@ -1,6 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
+import RiskActionPlan from './RiskActionPlan';
 
 const Dashboard = () => {
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
+
+  const handleRiskClick = (invoice) => {
+    setSelectedInvoice(invoice);
+    setIsRiskModalOpen(true);
+  };
+
+  const closeRiskModal = () => {
+    setIsRiskModalOpen(false);
+    setSelectedInvoice(null);
+  };
   // Sample invoice data - in real app this would come from an API/database
   const invoices = [
     {
@@ -193,11 +206,6 @@ const Dashboard = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold text-gray-900">{invoice.customerName}</h4>
-                      {invoice.riskLevel === 'high' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                          ⚠️ High Risk
-                        </span>
-                      )}
                     </div>
                     <p className="text-sm text-gray-600">{invoice.jobDescription}</p>
                     <p className="text-lg font-bold text-gray-900">${invoice.amount}</p>
@@ -212,9 +220,22 @@ const Dashboard = () => {
                       </div>
                     )}
                   </div>
-                  <span className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
-                    {statusStyle.label}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
+                      {statusStyle.label}
+                    </span>
+                    {invoice.riskLevel === 'high' && (
+                      <button 
+                        onClick={() => handleRiskClick(invoice)}
+                        className="flex items-center gap-1 w-32 hover:bg-teal-50 p-1 -m-1 rounded transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                        <span className="text-xs text-teal-700 font-medium">Late risk</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Action Button - Different text based on notification history */}
@@ -228,6 +249,13 @@ const Dashboard = () => {
           })}
         </div>
       </main>
+
+      {/* Risk Action Plan Modal */}
+      <RiskActionPlan 
+        invoice={selectedInvoice}
+        isOpen={isRiskModalOpen}
+        onClose={closeRiskModal}
+      />
     </div>
   );
 };
