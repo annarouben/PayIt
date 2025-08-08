@@ -90,26 +90,30 @@ const Dashboard = () => {
     switch (invoice.status) {
       case 'overdue':
         return {
-          bg: 'bg-red-100',
-          text: 'text-red-800',
+          border: 'border-l-4 border-red-500',
+          bg: 'bg-red-50',
+          text: 'text-gray-700',
           label: `${invoice.daysOverdue} days overdue`
         };
       case 'due':
         return {
-          bg: 'bg-amber-100',
-          text: 'text-amber-800',
+          border: 'border-l-4 border-amber-500',
+          bg: 'bg-amber-50',
+          text: 'text-gray-700',
           label: `Due in ${invoice.daysDue} days`
         };
       case 'paid':
         return {
-          bg: 'bg-green-100',
-          text: 'text-green-800',
+          border: 'border-l-4 border-green-500',
+          bg: 'bg-green-50',
+          text: 'text-gray-700',
           label: `Paid ${invoice.paidDate}`
         };
       default:
         return {
-          bg: 'bg-gray-100',
-          text: 'text-gray-800',
+          border: 'border-l-4 border-gray-500',
+          bg: 'bg-gray-50',
+          text: 'text-gray-700',
           label: 'Unknown'
         };
     }
@@ -157,18 +161,18 @@ const Dashboard = () => {
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Invoice Status</h2>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white p-3 rounded-lg shadow-sm text-center">
-              <div className="text-2xl font-bold text-red-600">2</div>
+            <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-red-500">
+              <div className="text-2xl font-bold text-gray-900">2</div>
               <div className="text-xs text-gray-600 mb-1">Overdue</div>
               <div className="text-sm font-semibold text-gray-900">${totals.overdue.toLocaleString()}</div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm text-center">
-              <div className="text-2xl font-bold text-amber-600">3</div>
+            <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-amber-500">
+              <div className="text-2xl font-bold text-gray-900">3</div>
               <div className="text-xs text-gray-600 mb-1">Due Soon</div>
               <div className="text-sm font-semibold text-gray-900">${totals.dueSoon.toLocaleString()}</div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm text-center">
-              <div className="text-2xl font-bold text-green-600">4</div>
+            <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-green-500">
+              <div className="text-2xl font-bold text-gray-900">4</div>
               <div className="text-xs text-gray-600 mb-1">Paid</div>
               <div className="text-sm font-semibold text-gray-900">${totals.paid.toLocaleString()}</div>
             </div>
@@ -208,7 +212,7 @@ const Dashboard = () => {
                       </div>
                     )}
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                  <span className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
                     {statusStyle.label}
                   </span>
                 </div>
