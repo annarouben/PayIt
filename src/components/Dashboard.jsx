@@ -108,7 +108,7 @@ const Dashboard = () => {
 
         {/* Invoice List */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Invoices</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Recent Invoices ({invoices.length})</h3>
           
           {invoices.map((invoice) => {
             const statusStyle = getStatusStyle(invoice);
