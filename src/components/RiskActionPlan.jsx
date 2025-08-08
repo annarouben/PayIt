@@ -53,7 +53,7 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
   const riskData = getRiskAnalysis(invoice);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
+    <div className="fixed inset-0 z-50 flex items-start">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-50"
@@ -61,9 +61,9 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
       ></div>
       
       {/* Modal Content */}
-      <div className="relative bg-white rounded-t-xl shadow-xl w-full max-w-[390px] mx-auto max-h-[80vh] overflow-hidden">
+      <div className="relative bg-white shadow-xl w-full max-w-[390px] mx-auto h-full flex flex-col">
         {/* Header */}
-        <div className="bg-teal-700 px-4 py-4 text-white">
+        <div className="bg-teal-700 px-4 py-4 text-white flex-shrink-0">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold">Late Payment Risk</h2>
             <button 
@@ -83,7 +83,7 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto max-h-[calc(80vh-80px)] px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
           
           {/* Risk Factors Section */}
           <div className="mt-4">
@@ -149,13 +149,6 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Action Button */}
-          <div className="mt-6 mb-2">
-            <button className="w-full bg-teal-700 hover:bg-teal-800 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-              Got it - Close
-            </button>
           </div>
         </div>
       </div>
