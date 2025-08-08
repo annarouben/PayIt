@@ -13,19 +13,75 @@ const Dashboard = () => {
     },
     {
       id: 2,
+      customerName: "Davis",
+      amount: 320,
+      status: "overdue",
+      daysOverdue: 7,
+      jobDescription: "Water heater replacement"
+    },
+    {
+      id: 3,
       customerName: "Smith",
       amount: 275,
       status: "due",
       daysDue: 2,
-      jobDescription: "Bathroom plumbing"
+      jobDescription: "Bathroom plumbing",
+      riskLevel: "high",
+      notifications: [
+        { type: "auto", sent: "2025-08-06", message: "Early reminder sent (customer typically pays 3-5 days late)" }
+      ]
     },
     {
-      id: 3,
+      id: 4,
+      customerName: "Brown",
+      amount: 185,
+      status: "due",
+      daysDue: 5,
+      jobDescription: "Pipe leak repair",
+      riskLevel: "high",
+      notifications: [
+        { type: "auto", sent: "2025-08-05", message: "Proactive reminder sent (history of late payments)" }
+      ]
+    },
+    {
+      id: 5,
+      customerName: "Miller",
+      amount: 95,
+      status: "due",
+      daysDue: 1,
+      jobDescription: "Faucet replacement"
+    },
+    {
+      id: 6,
       customerName: "Williams",
       amount: 120,
       status: "paid",
       paidDate: "Today",
       jobDescription: "Toilet installation"
+    },
+    {
+      id: 7,
+      customerName: "Wilson",
+      amount: 450,
+      status: "paid",
+      paidDate: "Yesterday",
+      jobDescription: "Full bathroom renovation"
+    },
+    {
+      id: 8,
+      customerName: "Garcia",
+      amount: 85,
+      status: "paid",
+      paidDate: "2 days ago",
+      jobDescription: "Garbage disposal fix"
+    },
+    {
+      id: 9,
+      customerName: "Martinez",
+      amount: 225,
+      status: "paid",
+      paidDate: "3 days ago",
+      jobDescription: "Shower installation"
     }
   ];
 
@@ -59,6 +115,19 @@ const Dashboard = () => {
     }
   };
 
+  // Function to calculate days since last notification
+  const getDaysSinceNotification = (notifications) => {
+    if (!notifications || notifications.length === 0) return null;
+    
+    const lastNotification = notifications[notifications.length - 1];
+    const lastSent = new Date(lastNotification.sent);
+    const today = new Date('2025-08-08'); // Using current date
+    const diffTime = Math.abs(today - lastSent);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
   // Calculate totals for each status
   const calculateTotals = () => {
     const overdue = invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.amount, 0);
@@ -89,17 +158,17 @@ const Dashboard = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Invoice Status</h2>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white p-3 rounded-lg shadow-sm text-center">
-              <div className="text-2xl font-bold text-red-600">1</div>
+              <div className="text-2xl font-bold text-red-600">2</div>
               <div className="text-xs text-gray-600 mb-1">Overdue</div>
               <div className="text-sm font-semibold text-gray-900">${totals.overdue.toLocaleString()}</div>
             </div>
             <div className="bg-white p-3 rounded-lg shadow-sm text-center">
-              <div className="text-2xl font-bold text-amber-600">1</div>
+              <div className="text-2xl font-bold text-amber-600">3</div>
               <div className="text-xs text-gray-600 mb-1">Due Soon</div>
               <div className="text-sm font-semibold text-gray-900">${totals.dueSoon.toLocaleString()}</div>
             </div>
             <div className="bg-white p-3 rounded-lg shadow-sm text-center">
-              <div className="text-2xl font-bold text-green-600">1</div>
+              <div className="text-2xl font-bold text-green-600">4</div>
               <div className="text-xs text-gray-600 mb-1">Paid</div>
               <div className="text-sm font-semibold text-gray-900">${totals.paid.toLocaleString()}</div>
             </div>
@@ -112,23 +181,43 @@ const Dashboard = () => {
           
           {invoices.map((invoice) => {
             const statusStyle = getStatusStyle(invoice);
+            const daysSinceNotification = getDaysSinceNotification(invoice.notifications);
             
             return (
               <div key={invoice.id} className="bg-white rounded-lg shadow-sm p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{invoice.customerName}</h4>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-gray-900">{invoice.customerName}</h4>
+                      {invoice.riskLevel === 'high' && (
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                          ⚠️ High Risk
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-600">{invoice.jobDescription}</p>
                     <p className="text-lg font-bold text-gray-900">${invoice.amount}</p>
+                    
+                    {/* Notification History */}
+                    {invoice.notifications && invoice.notifications.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <span>📱</span>
+                          <span>Auto reminder sent {daysSinceNotification} days ago</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
                     {statusStyle.label}
                   </span>
                 </div>
                 
-                {/* Action Button */}
-                <button className="w-full bg-teal-600 hover:bg-teal-700 focus:bg-teal-700 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors">
-                  Send Text Reminder
+                {/* Action Button - Different text based on notification history */}
+                <button className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors">
+                  {invoice.notifications && invoice.notifications.length > 0 
+                    ? "Send Follow-up Text" 
+                    : "Send Text Reminder"}
                 </button>
               </div>
             );
