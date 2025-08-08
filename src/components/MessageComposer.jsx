@@ -51,6 +51,14 @@ const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
     );
   };
 
+  // Handle checkbox change - populate custom message with template when enabled
+  const handleCustomMessageToggle = (checked) => {
+    setUseCustomMessage(checked);
+    if (checked && !customMessage) {
+      setCustomMessage(getMessageTemplate());
+    }
+  };
+
   const handleSendMessage = () => {
     const message = useCustomMessage ? customMessage : getMessageTemplate();
     const cleanPhoneNumber = phoneNumber.replace(/\D/g, ''); // Remove non-digits
@@ -104,10 +112,10 @@ const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-6">
           
           {/* Phone Number Input */}
-          <div className="mb-4">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Customer Phone Number
             </label>
@@ -117,28 +125,13 @@ const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="(555) 123-4567"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent"
+              autoFocus
               required
             />
           </div>
 
-          {/* Message Toggle */}
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="checkbox"
-                id="customMessage"
-                checked={useCustomMessage}
-                onChange={(e) => setUseCustomMessage(e.target.checked)}
-                className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-              />
-              <label htmlFor="customMessage" className="text-sm font-medium text-gray-900">
-                Customize message
-              </label>
-            </div>
-          </div>
-
           {/* Message Preview/Editor */}
-          <div className="mb-4">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Message Preview
             </label>
@@ -156,32 +149,45 @@ const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
               </div>
             )}
             
-            {/* Character Count */}
-            <div className="mt-1 text-right">
+            {/* Character Count and Checkbox Row */}
+            <div className="mt-2 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="customMessage"
+                  checked={useCustomMessage}
+                  onChange={(e) => handleCustomMessageToggle(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 focus:ring-2 checked:bg-teal-600 checked:border-teal-600"
+                />
+                <label htmlFor="customMessage" className="text-sm font-medium text-gray-900">
+                  Customize message
+                </label>
+              </div>
               <span className={`text-xs ${isMessageTooLong ? 'text-red-500' : 'text-gray-500'}`}>
                 {messageLength} characters
                 {isMessageTooLong && ' (message too long)'}
               </span>
             </div>
           </div>
+        </div>
 
+        {/* Footer Actions */}
+        <div className="flex-shrink-0 px-4 pb-4 pt-2 border-t border-gray-200">
           {/* Info Message */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-4">
             <div className="flex items-start gap-2">
-              <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <svg className="w-5 h-5 text-teal-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
               </svg>
               <div>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-gray-700">
                   This will open your phone's messaging app with the message pre-filled. You can review and edit before sending.
                 </p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer Actions */}
-        <div className="flex-shrink-0 px-4 pb-4 pt-2 border-t border-gray-200">
+          {/* Action Buttons */}
           <div className="flex gap-3">
             <button
               onClick={onClose}
