@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import RiskActionPlan from './RiskActionPlan';
 import MessageComposer from './MessageComposer';
+import Analytics from './Analytics';
 
 const Dashboard = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [messageModal, setMessageModal] = useState({
     isOpen: false,
     invoice: null,
@@ -336,15 +338,31 @@ const Dashboard = () => {
 
   const totals = calculateTotals();
 
+  // Show Analytics page if requested
+  if (showAnalytics) {
+    return <Analytics onBack={() => setShowAnalytics(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 max-w-[390px] mx-auto">
       {/* Navigation Header */}
       <header className="bg-gradient-to-r from-teal-700 to-teal-800 px-4 py-4 flex justify-between items-center">
         <h1 className="text-white text-xl font-semibold">PayMe</h1>
-        <div className="w-8 h-8 bg-teal-700 rounded-full flex items-center justify-center">
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-          </svg>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowAnalytics(true)}
+            className="p-2 text-white hover:bg-teal-600 rounded transition-colors"
+            title="View Analytics"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+            </svg>
+          </button>
+          <div className="w-8 h-8 bg-teal-700 rounded-full flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+          </div>
         </div>
       </header>
 
