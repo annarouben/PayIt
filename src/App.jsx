@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
 import SplashScreen from './components/SplashScreen'
 import Dashboard from './components/Dashboard'
@@ -14,7 +15,13 @@ function App() {
     return <SplashScreen onComplete={handleSplashComplete} />
   }
 
-  return <Dashboard />
+  return (
+    <BrowserRouter basename="/PayMe">
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 export default App

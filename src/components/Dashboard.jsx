@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import RiskActionPlan from './RiskActionPlan';
 import MessageComposer from './MessageComposer';
 import Analytics from './Analytics';
+import { 
+  ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  StarIcon 
+} from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -37,6 +42,24 @@ const Dashboard = () => {
       invoice: null,
       messageType: null
     });
+  };
+
+  const handleMarkPaid = (invoiceId) => {
+    setInvoices(prevInvoices => 
+      prevInvoices.map(invoice => {
+        if (invoice.id === invoiceId) {
+          return {
+            ...invoice,
+            status: 'paid',
+            paidDate: 'Today',
+            // Remove overdue/due specific fields when marked as paid
+            daysOverdue: undefined,
+            daysDue: undefined
+          };
+        }
+        return invoice;
+      })
+    );
   };
 
   const [invoices, setInvoices] = useState([
@@ -147,7 +170,8 @@ const Dashboard = () => {
       jobDescription: "Shower installation",
       reviewRequestSent: true,
       reviewStatus: "completed",
-      reviewRequestDate: "2024-12-04"
+      reviewRequestDate: "2024-12-04",
+      reviewRating: 4.5
     }
   ]);
 
@@ -276,28 +300,32 @@ const Dashboard = () => {
           border: 'border-l-4 border-red-500',
           bg: 'bg-red-50',
           text: 'text-gray-700',
-          label: `${invoice.daysOverdue} days overdue`
+          label: `${invoice.daysOverdue} days overdue`,
+          riskLabel: invoice.riskLevel === 'high' ? 'Late often' : null
         };
       case 'due':
         return {
           border: 'border-l-4 border-amber-500',
           bg: 'bg-amber-50',
           text: 'text-gray-700',
-          label: `Due in ${invoice.daysDue} days`
+          label: `Due in ${invoice.daysDue} days`,
+          riskLabel: invoice.riskLevel === 'high' ? 'Late often' : null
         };
       case 'paid':
         return {
           border: 'border-l-4 border-green-500',
           bg: 'bg-green-50',
           text: 'text-gray-700',
-          label: `Paid ${invoice.paidDate}`
+          label: `Paid ${invoice.paidDate}`,
+          riskLabel: null
         };
       default:
         return {
           border: 'border-l-4 border-gray-500',
           bg: 'bg-gray-50',
           text: 'text-gray-700',
-          label: 'Unknown'
+          label: 'Unknown',
+          riskLabel: null
         };
     }
   };
@@ -337,6 +365,40 @@ const Dashboard = () => {
   };
 
   const totals = calculateTotals();
+
+  // Sort invoices - overdue by most overdue first, then by status
+  const sortedInvoices = [...invoices].sort((a, b) => {
+    // First, sort by status priority: overdue > due > paid
+    const statusOrder = { 'overdue': 0, 'due': 1, 'paid': 2 };
+    const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+    
+    if (statusDiff !== 0) return statusDiff;
+    
+    // Within overdue invoices, sort by most overdue first (highest daysOverdue)
+    if (a.status === 'overdue' && b.status === 'overdue') {
+      return b.daysOverdue - a.daysOverdue;
+    }
+    
+    // Within due invoices, sort by due date (lowest daysDue first - most urgent)
+    if (a.status === 'due' && b.status === 'due') {
+      return a.daysDue - b.daysDue;
+    }
+    
+    // Within paid invoices, prioritize those that can have review requests sent
+    if (a.status === 'paid' && b.status === 'paid') {
+      // Priority order: no review request sent > pending review > completed review
+      const getReviewPriority = (invoice) => {
+        if (!invoice.reviewRequestSent) return 0; // Highest priority - can ask for review
+        if (invoice.reviewStatus === 'pending') return 1; // Medium priority - pending
+        if (invoice.reviewStatus === 'completed') return 2; // Lowest priority - completed
+        return 1; // Default to pending priority
+      };
+      
+      return getReviewPriority(a) - getReviewPriority(b);
+    }
+    
+    return 0;
+  });
 
   // Show Analytics page if requested
   if (showAnalytics) {
@@ -392,9 +454,9 @@ const Dashboard = () => {
 
         {/* Invoice List */}
         <div className="space-y-3">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Invoices ({invoices.length})</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Recent Invoices ({sortedInvoices.length})</h3>
           
-          {invoices.map((invoice) => {
+          {sortedInvoices.map((invoice) => {
             const statusStyle = getStatusStyle(invoice);
             const daysSinceNotification = getDaysSinceNotification(invoice.notifications);
             const daysSinceReviewRequest = getDaysSinceReviewRequest(invoice.reviewRequestDate);
@@ -408,22 +470,46 @@ const Dashboard = () => {
                     </div>
                     <p className="text-sm text-gray-600">{invoice.jobDescription}</p>
                     <p className="text-lg font-bold text-gray-900">${invoice.amount}</p>
+                    {/* Star Rating Display */}
+                    {invoice.reviewRating && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <div className="flex">
+                          {[...Array(5)].map((_, i) => {
+                            const starValue = i + 1;
+                            const isFilled = starValue <= Math.floor(invoice.reviewRating);
+                            const isHalf = !isFilled && starValue - 0.5 <= invoice.reviewRating;
+                            
+                            return (
+                              <svg key={i} className="w-3 h-3 text-teal-600" fill={isFilled || isHalf ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                                {isHalf ? (
+                                  <defs>
+                                    <linearGradient id={`half-${invoice.id}-${i}`}>
+                                      <stop offset="50%" stopColor="currentColor" />
+                                      <stop offset="50%" stopColor="transparent" />
+                                    </linearGradient>
+                                  </defs>
+                                ) : null}
+                                <path 
+                                  fill={isHalf ? `url(#half-${invoice.id}-${i})` : (isFilled ? "currentColor" : "none")}
+                                  stroke="currentColor" 
+                                  strokeWidth={1.5} 
+                                  d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" 
+                                />
+                              </svg>
+                            );
+                          })}
+                        </div>
+                        <span className="text-xs text-gray-600 ml-1">{invoice.reviewRating}/5</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
-                      {statusStyle.label}
-                    </span>
-                    {invoice.riskLevel === 'high' && (
-                      <button 
-                        onClick={() => handleRiskClick(invoice)}
-                        className="flex items-center gap-1 w-32 hover:bg-red-100 px-3 py-1 rounded transition-colors border-l-4 border-red-500 bg-red-50"
-                      >
-                        <span className="text-xs text-gray-700 font-medium">Late risk</span>
-                        <svg className="w-4 h-4 text-red-500 ml-auto" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
-                        </svg>
-                      </button>
-                    )}
+                    <div className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
+                      <div>{statusStyle.label}</div>
+                      {statusStyle.riskLabel && (
+                        <div className="mt-0.5 text-red-600 font-medium">{statusStyle.riskLabel}</div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -436,11 +522,24 @@ const Dashboard = () => {
                       </svg>
                       <span>Auto reminder sent {daysSinceNotification} days ago</span>
                     </p>
+                    {/* Educational Link for Late Risk customers */}
+                    {invoice.riskLevel === 'high' && (
+                      <button
+                        onClick={() => {
+                          setSelectedInvoice(invoice);
+                          setIsRiskModalOpen(true);
+                        }}
+                        className="text-xs text-teal-700 hover:text-teal-800 ml-5 mt-1 block"
+                        title="Learn payment collection strategies"
+                      >
+                        How to avoid late payments
+                      </button>
+                    )}
                   </div>
                 )}
 
-                {/* Review Request History - Full Width */}
-                {invoice.reviewRequestSent && daysSinceReviewRequest && (
+                {/* Review Request History - Full Width (only show for pending reviews, not completed) */}
+                {invoice.reviewRequestSent && daysSinceReviewRequest && invoice.reviewStatus !== 'completed' && (
                   <div className="mb-3">
                     <p className="text-xs text-gray-500 flex items-center gap-1">
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -455,39 +554,46 @@ const Dashboard = () => {
                 {invoice.status === 'paid' ? (
                   // Paid invoices - show review request buttons
                   invoice.reviewRequestSent ? (
-                    invoice.reviewStatus === 'completed' ? (
-                      <div className="w-full flex items-center justify-center text-green-600 font-medium py-3 px-4 bg-green-50 rounded-lg">
-                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
-                        </svg>
-                        Review Received
-                      </div>
-                    ) : (
+                    invoice.reviewStatus === 'completed' ? null : null // No action button for completed or pending review requests
+                  ) : (
+                    <div className="flex gap-2">
                       <button 
                         onClick={() => handleSendMessage(invoice, 'review-request')}
-                        className="w-full bg-transparent hover:bg-teal-50 focus:bg-teal-50 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-teal-700 font-medium py-3 px-4 rounded-lg min-h-12 transition-colors border-2 border-teal-700 hover:border-teal-800"
+                        className="flex-1 flex flex-col items-center justify-center gap-1 bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
                       >
-                        Resend Review Request
+                        <StarIcon className="w-4 h-4" />
+                        <span className="text-xs font-medium">Ask for Review</span>
                       </button>
-                    )
-                  ) : (
-                    <button 
-                      onClick={() => handleSendMessage(invoice, 'review-request')}
-                      className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors"
-                    >
-                      Request Review
-                    </button>
+                      <button 
+                        onClick={() => handleSendMessage(invoice, 'follow-up')}
+                        className="flex-1 flex flex-col items-center justify-center gap-1 bg-transparent hover:bg-teal-50 focus:bg-teal-50 text-teal-700 hover:text-teal-800 border border-teal-700 hover:border-teal-800 px-4 py-2 rounded-lg min-h-10 transition-colors"
+                      >
+                        <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                        <span className="text-xs font-medium">Follow Up</span>
+                      </button>
+                    </div>
                   )
                 ) : (
-                  // Unpaid invoices - show payment reminder buttons
-                  <button 
-                    onClick={() => handleSendMessage(invoice, 'payment-reminder')}
-                    className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors"
-                  >
-                    {invoice.notifications && invoice.notifications.length > 0 
-                      ? "Send Follow-up Text" 
-                      : "Send Text Reminder"}
-                  </button>
+                  // Unpaid invoices - show payment reminder buttons and mark paid
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleSendMessage(invoice, 'payment-reminder')}
+                      className="flex-1 flex flex-col items-center justify-center gap-1 bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
+                    >
+                      <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                      <span className="text-xs font-medium text-center">
+                        Remind
+                      </span>
+                    </button>
+                    <button 
+                      onClick={() => handleMarkPaid(invoice.id)}
+                      className="flex-1 flex flex-col items-center justify-center gap-1 bg-transparent hover:bg-teal-50 focus:bg-teal-50 text-teal-700 hover:text-teal-800 border border-teal-700 hover:border-teal-800 px-4 py-2 rounded-lg min-h-10 transition-colors"
+                      title="Mark as Paid"
+                    >
+                      <CheckCircleIcon className="w-4 h-4" />
+                      <span className="text-xs font-medium">Mark Paid</span>
+                    </button>
+                  </div>
                 )}
               </div>
             );
@@ -499,7 +605,10 @@ const Dashboard = () => {
       <RiskActionPlan 
         invoice={selectedInvoice}
         isOpen={isRiskModalOpen}
-        onClose={closeRiskModal}
+        onClose={() => {
+          setIsRiskModalOpen(false);
+          setSelectedInvoice(null);
+        }}
       />
 
       {/* Message Composer Modal */}
