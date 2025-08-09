@@ -121,7 +121,8 @@ const Dashboard = () => {
       paidDate: "Yesterday",
       jobDescription: "Full bathroom renovation",
       reviewRequestSent: true,
-      reviewStatus: "pending"
+      reviewStatus: "pending",
+      reviewRequestDate: "2024-12-06"
     },
     {
       id: 8,
@@ -143,7 +144,8 @@ const Dashboard = () => {
       paidDate: "3 days ago",
       jobDescription: "Shower installation",
       reviewRequestSent: true,
-      reviewStatus: "completed"
+      reviewStatus: "completed",
+      reviewRequestDate: "2024-12-04"
     }
   ]);
 
@@ -169,6 +171,7 @@ const Dashboard = () => {
           } else if (messageType === 'review-request') {
             updatedInvoice.reviewRequestSent = true;
             updatedInvoice.reviewStatus = "pending";
+            updatedInvoice.reviewRequestDate = today;
             updatedInvoice.customerPhone = phoneNumber;
           }
           
@@ -310,6 +313,18 @@ const Dashboard = () => {
     return diffDays;
   };
 
+  // Function to calculate days since review request was sent
+  const getDaysSinceReviewRequest = (reviewRequestDate) => {
+    if (!reviewRequestDate) return null;
+    
+    const requestSent = new Date(reviewRequestDate);
+    const today = new Date('2025-08-08'); // Using current date
+    const diffTime = Math.abs(today - requestSent);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
   // Calculate totals for each status
   const calculateTotals = () => {
     const overdue = invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.amount, 0);
@@ -364,6 +379,7 @@ const Dashboard = () => {
           {invoices.map((invoice) => {
             const statusStyle = getStatusStyle(invoice);
             const daysSinceNotification = getDaysSinceNotification(invoice.notifications);
+            const daysSinceReviewRequest = getDaysSinceReviewRequest(invoice.reviewRequestDate);
             
             return (
               <div key={invoice.id} className="bg-white rounded-lg shadow-sm p-4">
@@ -374,18 +390,6 @@ const Dashboard = () => {
                     </div>
                     <p className="text-sm text-gray-600">{invoice.jobDescription}</p>
                     <p className="text-lg font-bold text-gray-900">${invoice.amount}</p>
-                    
-                    {/* Notification History */}
-                    {invoice.notifications && invoice.notifications.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-xs text-gray-500 flex items-center gap-1">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
-                          </svg>
-                          <span>Auto reminder sent {daysSinceNotification} days ago</span>
-                        </p>
-                      </div>
-                    )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
@@ -394,16 +398,40 @@ const Dashboard = () => {
                     {invoice.riskLevel === 'high' && (
                       <button 
                         onClick={() => handleRiskClick(invoice)}
-                        className="flex items-center gap-1 w-32 hover:bg-teal-50 p-1 -m-1 rounded transition-colors"
+                        className="flex items-center gap-1 w-32 hover:bg-red-100 px-3 py-1 rounded transition-colors border-l-4 border-red-500 bg-red-50"
                       >
-                        <svg className="w-4 h-4 text-teal-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        <span className="text-xs text-gray-700 font-medium">Late risk</span>
+                        <svg className="w-4 h-4 text-red-500 ml-auto" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
                         </svg>
-                        <span className="text-xs text-teal-700 font-medium">Late risk</span>
                       </button>
                     )}
                   </div>
                 </div>
+                
+                {/* Notification History - Full Width */}
+                {invoice.notifications && invoice.notifications.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                      </svg>
+                      <span>Auto reminder sent {daysSinceNotification} days ago</span>
+                    </p>
+                  </div>
+                )}
+
+                {/* Review Request History - Full Width */}
+                {invoice.reviewRequestSent && daysSinceReviewRequest && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+                      </svg>
+                      <span>Review request sent {daysSinceReviewRequest} days ago</span>
+                    </p>
+                  </div>
+                )}
                 
                 {/* Action Button - Different based on invoice status and review status */}
                 {invoice.status === 'paid' ? (
@@ -419,7 +447,7 @@ const Dashboard = () => {
                     ) : (
                       <button 
                         onClick={() => handleSendMessage(invoice, 'review-request')}
-                        className="w-full bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-white font-medium py-3 px-4 rounded-lg min-h-12 transition-colors"
+                        className="w-full bg-transparent hover:bg-teal-50 focus:bg-teal-50 focus:ring-2 focus:ring-teal-600 focus:ring-offset-2 text-teal-700 font-medium py-3 px-4 rounded-lg min-h-12 transition-colors border-2 border-teal-700 hover:border-teal-800"
                       >
                         Resend Review Request
                       </button>
