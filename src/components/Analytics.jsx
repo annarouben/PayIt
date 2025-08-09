@@ -161,14 +161,19 @@ const Analytics = ({ onBack }) => {
               {monthlyData.map((month) => (
                 <div key={month.month} className="flex items-center gap-2">
                   <span className="w-8 text-xs text-gray-600">{month.month}</span>
-                  <div className="flex-1 flex bg-gray-200 rounded-full h-4 overflow-hidden">
+                  <div className="flex-1 flex bg-gray-200 rounded-full h-3 overflow-hidden">
+                    {/* On-time payments - solid teal */}
                     <div 
-                      className="bg-green-500 h-full"
+                      className="bg-teal-600 h-full"
                       style={{ width: `${month.onTime}%` }}
                     ></div>
+                    {/* Late payments - striped gray pattern */}
                     <div 
-                      className="bg-red-500 h-full"
-                      style={{ width: `${month.late}%` }}
+                      className="h-full bg-gray-400 relative"
+                      style={{ 
+                        width: `${month.late}%`,
+                        backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.3) 2px, rgba(255,255,255,0.3) 4px)'
+                      }}
                     ></div>
                   </div>
                   <span className="w-12 text-xs text-gray-600">{month.onTime}%</span>
@@ -177,11 +182,16 @@ const Analytics = ({ onBack }) => {
             </div>
             <div className="flex items-center justify-center gap-4 mt-3 text-xs">
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-green-500 rounded"></div>
+                <div className="w-3 h-3 bg-teal-600 rounded"></div>
                 <span className="text-gray-600">On-time</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-red-500 rounded"></div>
+                <div 
+                  className="w-3 h-3 bg-gray-400 rounded relative"
+                  style={{
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(255,255,255,0.3) 1px, rgba(255,255,255,0.3) 2px)'
+                  }}
+                ></div>
                 <span className="text-gray-600">Late</span>
               </div>
             </div>
@@ -195,14 +205,41 @@ const Analytics = ({ onBack }) => {
                 <div key={month.month} className="flex items-center gap-2">
                   <span className="w-8 text-xs text-gray-600">{month.month}</span>
                   <div className="flex-1 bg-gray-200 rounded-full h-3 relative">
-                    <div 
-                      className="bg-amber-500 h-full rounded-full"
-                      style={{ width: `${(month.avgDays / 7) * 100}%` }}
-                    ></div>
+                    {/* Better performance (lower days) - solid teal */}
+                    {month.avgDays <= 4.5 ? (
+                      <div 
+                        className="bg-teal-600 h-full rounded-full"
+                        style={{ width: `${(month.avgDays / 7) * 100}%` }}
+                      ></div>
+                    ) : (
+                      /* Higher days - striped gray pattern */
+                      <div 
+                        className="bg-gray-400 h-full rounded-full relative"
+                        style={{ 
+                          width: `${(month.avgDays / 7) * 100}%`,
+                          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(255,255,255,0.3) 1px, rgba(255,255,255,0.3) 2px)'
+                        }}
+                      ></div>
+                    )}
                   </div>
                   <span className="w-12 text-xs text-gray-600">{month.avgDays}d</span>
                 </div>
               ))}
+            </div>
+            <div className="flex items-center justify-center gap-4 mt-3 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-teal-600 rounded"></div>
+                <span className="text-gray-600">Good (≤4.5 days)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div 
+                  className="w-3 h-3 bg-gray-400 rounded relative"
+                  style={{
+                    backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 1px, rgba(255,255,255,0.3) 1px, rgba(255,255,255,0.3) 2px)'
+                  }}
+                ></div>
+                <span className="text-gray-600">Slower (>4.5 days)</span>
+              </div>
             </div>
           </div>
         </div>
