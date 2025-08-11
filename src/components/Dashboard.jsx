@@ -69,7 +69,7 @@ const Dashboard = () => {
     // Remove flying dollar after animation completes
     setTimeout(() => {
       setFlyingDollars(prev => prev.filter(dollar => dollar.id !== dollarId));
-    }, 1500); // Match flyDollarSign animation duration
+    }, 1200); // Match flyDollarSign animation duration
     
     // After animation completes, mark invoice as paid and move it to paid section
     setTimeout(() => {

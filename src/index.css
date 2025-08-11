@@ -97,26 +97,18 @@ body {
   }
 }
 
-/* Flying dollar sign animation - smooth curve to bottom of viewport with fade */
+/* Flying dollar sign animation - straight line to bottom-right corner with fade */
 @keyframes flyDollarSign {
   0% {
-    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+    transform: translateY(0) translateX(0) scale(1);
     opacity: 1;
   }
-  25% {
-    transform: translateY(25vh) translateX(30px) scale(1.1) rotate(180deg);
+  70% {
+    transform: translateY(80vh) translateX(60vw) scale(0.8);
     opacity: 1;
-  }
-  50% {
-    transform: translateY(50vh) translateX(0px) scale(1.05) rotate(360deg);
-    opacity: 0.8;
-  }
-  75% {
-    transform: translateY(75vh) translateX(-20px) scale(0.95) rotate(540deg);
-    opacity: 0.4;
   }
   100% {
-    transform: translateY(90vh) translateX(0px) scale(0.8) rotate(720deg);
+    transform: translateY(90vh) translateX(70vw) scale(0.6);
     opacity: 0;
   }
 }
@@ -146,7 +138,7 @@ body {
 }
 
 .flying-dollar {
-  animation: flyDollarSign 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: flyDollarSign 1.2s ease-out forwards;
 }
 
 .pulse-paid-counter {
