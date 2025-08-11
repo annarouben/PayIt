@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RiskActionPlan from './RiskActionPlan';
 import MessageComposer from './MessageComposer';
 import Analytics from './Analytics';
@@ -17,6 +17,10 @@ const Dashboard = () => {
     invoice: null,
     messageType: null
   });
+  const [recentlyPaidInvoices, setRecentlyPaidInvoices] = useState(new Set()); // Track recently paid invoices
+  const [animatingInvoices, setAnimatingInvoices] = useState(new Set()); // Track invoices being animated
+  const [recentlyMovedInvoices, setRecentlyMovedInvoices] = useState(new Set()); // Track invoices that just moved to paid section
+  const [flyingDollars, setFlyingDollars] = useState([]); // Track flying dollar animations
 
   const handleRiskClick = (invoice) => {
     setSelectedInvoice(invoice);
@@ -45,21 +49,78 @@ const Dashboard = () => {
   };
 
   const handleMarkPaid = (invoiceId) => {
-    setInvoices(prevInvoices => 
-      prevInvoices.map(invoice => {
-        if (invoice.id === invoiceId) {
-          return {
-            ...invoice,
-            status: 'paid',
-            paidDate: 'Today',
-            // Remove overdue/due specific fields when marked as paid
-            daysOverdue: undefined,
-            daysDue: undefined
-          };
-        }
-        return invoice;
-      })
-    );
+    // Only add to recently paid set for UI highlighting - don't change status yet
+    setRecentlyPaidInvoices(prev => new Set(prev).add(invoiceId));
+  };
+
+  const handleReviewLater = (invoiceId) => {
+    // Prevent duplicate animations if already animating
+    if (animatingInvoices.has(invoiceId)) {
+      return;
+    }
+    
+    // Start animation
+    setAnimatingInvoices(prev => new Set(prev).add(invoiceId));
+    
+    // Create flying dollar animation
+    const dollarId = Date.now() + Math.random(); // Unique ID for this dollar
+    setFlyingDollars(prev => [...prev, { id: dollarId, invoiceId }]);
+    
+    // Remove flying dollar after animation completes
+    setTimeout(() => {
+      setFlyingDollars(prev => prev.filter(dollar => dollar.id !== dollarId));
+    }, 1500); // Match flyDollarSign animation duration
+    
+    // After animation completes, mark invoice as paid and move it to paid section
+    setTimeout(() => {
+      setInvoices(prevInvoices => 
+        prevInvoices.map(invoice => {
+          if (invoice.id === invoiceId) {
+            return {
+              ...invoice,
+              status: 'paid',
+              paidDate: 'Today',
+              // Remove overdue/due specific fields when marked as paid
+              daysOverdue: undefined,
+              daysDue: undefined
+            };
+          }
+          return invoice;
+        })
+      );
+      
+      // Remove from recently paid set
+      setRecentlyPaidInvoices(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(invoiceId);
+        return newSet;
+      });
+      
+      // Remove from animating set
+      setAnimatingInvoices(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(invoiceId);
+        return newSet;
+      });
+      
+      // Add to recently moved set for slide-in animation
+      setRecentlyMovedInvoices(prev => new Set(prev).add(invoiceId));
+      
+      // Remove from recently moved after animation completes
+      setTimeout(() => {
+        setRecentlyMovedInvoices(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(invoiceId);
+          return newSet;
+        });
+      }, 400); // Match slide-in animation duration
+    }, 400); // Match CSS animation duration
+  };
+
+  const handleAskForReviewFromRecentlyPaid = (invoice) => {
+    // Keep in recently paid state - don't remove until user clicks "Later"
+    // Just open message modal for review request
+    handleSendMessage(invoice, 'review-request');
   };
 
   const [invoices, setInvoices] = useState([
@@ -357,11 +418,24 @@ const Dashboard = () => {
 
   // Calculate totals for each status
   const calculateTotals = () => {
-    const overdue = invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.amount, 0);
-    const dueSoon = invoices.filter(inv => inv.status === 'due').reduce((sum, inv) => sum + inv.amount, 0);
-    const paid = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0);
+    const overdueInvoices = invoices.filter(inv => inv.status === 'overdue');
+    const dueSoonInvoices = invoices.filter(inv => inv.status === 'due');
+    const paidInvoices = invoices.filter(inv => inv.status === 'paid');
     
-    return { overdue, dueSoon, paid };
+    return { 
+      overdue: {
+        count: overdueInvoices.length,
+        amount: overdueInvoices.reduce((sum, inv) => sum + inv.amount, 0)
+      },
+      dueSoon: {
+        count: dueSoonInvoices.length,
+        amount: dueSoonInvoices.reduce((sum, inv) => sum + inv.amount, 0)
+      },
+      paid: {
+        count: paidInvoices.length,
+        amount: paidInvoices.reduce((sum, inv) => sum + inv.amount, 0)
+      }
+    };
   };
 
   const totals = calculateTotals();
@@ -435,19 +509,19 @@ const Dashboard = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Invoice Status</h2>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-red-500">
-              <div className="text-2xl font-bold text-gray-900">2</div>
+              <div className="text-2xl font-bold text-gray-900">{totals.overdue.count}</div>
               <div className="text-xs text-gray-600 mb-1">Overdue</div>
-              <div className="text-sm font-semibold text-gray-900">${totals.overdue.toLocaleString()}</div>
+              <div className="text-sm font-semibold text-gray-900">${totals.overdue.amount.toLocaleString()}</div>
             </div>
             <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-amber-500">
-              <div className="text-2xl font-bold text-gray-900">3</div>
+              <div className="text-2xl font-bold text-gray-900">{totals.dueSoon.count}</div>
               <div className="text-xs text-gray-600 mb-1">Due Soon</div>
-              <div className="text-sm font-semibold text-gray-900">${totals.dueSoon.toLocaleString()}</div>
+              <div className="text-sm font-semibold text-gray-900">${totals.dueSoon.amount.toLocaleString()}</div>
             </div>
             <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-green-500">
-              <div className="text-2xl font-bold text-gray-900">4</div>
+              <div className="text-2xl font-bold text-gray-900">{totals.paid.count}</div>
               <div className="text-xs text-gray-600 mb-1">Paid</div>
-              <div className="text-sm font-semibold text-gray-900">${totals.paid.toLocaleString()}</div>
+              <div className="text-sm font-semibold text-gray-900">${totals.paid.amount.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -460,9 +534,14 @@ const Dashboard = () => {
             const statusStyle = getStatusStyle(invoice);
             const daysSinceNotification = getDaysSinceNotification(invoice.notifications);
             const daysSinceReviewRequest = getDaysSinceReviewRequest(invoice.reviewRequestDate);
+            const isRecentlyPaid = recentlyPaidInvoices.has(invoice.id);
+            const isAnimating = animatingInvoices.has(invoice.id);
+            const isRecentlyMoved = recentlyMovedInvoices.has(invoice.id);
             
             return (
-              <div key={invoice.id} className="bg-white rounded-lg shadow-sm p-4">
+              <div key={invoice.id} className={`relative bg-white rounded-lg shadow-sm p-4 transition-all duration-500 ${
+                isRecentlyPaid ? 'border-2 border-teal-200 bg-teal-50' : ''
+              } ${isAnimating ? 'invoice-slide-out' : ''} ${isRecentlyMoved ? 'invoice-slide-in' : ''}`}>
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -550,26 +629,50 @@ const Dashboard = () => {
                   </div>
                 )}
                 
-                {/* Action Button - Different based on invoice status and review status */}
-                {invoice.status === 'paid' ? (
-                  // Paid invoices - show review request buttons
+                {/* Action Button - Different based on invoice status and recently paid status */}
+                {isRecentlyPaid ? (
+                  // Recently paid - show review options with timeout
+                  <div className="space-y-3">
+                    <div className="bg-teal-100 border border-teal-300 rounded-lg p-3">
+                      <p className="text-sm text-teal-800 mb-3 font-medium">
+                        ✓ Invoice marked as paid! Would you like to ask for a review?
+                      </p>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleAskForReviewFromRecentlyPaid(invoice)}
+                          className="flex-1 inline-flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
+                        >
+                          <StarIcon className="w-4 h-4" />
+                          <span className="text-sm font-medium">Ask for Review</span>
+                        </button>
+                        <button 
+                          onClick={() => handleReviewLater(invoice.id)}
+                          className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-teal-700 border border-teal-700/40 rounded-lg hover:bg-teal-50 transition-colors"
+                        >
+                          Later
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : invoice.status === 'paid' ? (
+                  // Regular paid invoice logic
                   invoice.reviewRequestSent ? (
                     invoice.reviewStatus === 'completed' ? null : null // No action button for completed or pending review requests
                   ) : (
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleSendMessage(invoice, 'review-request')}
-                        className="flex-1 flex flex-col items-center justify-center gap-1 bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
+                        className="flex-1 inline-flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
                       >
                         <StarIcon className="w-4 h-4" />
-                        <span className="text-xs font-medium">Ask for Review</span>
+                        <span className="text-sm font-medium">Ask for Review</span>
                       </button>
                       <button 
                         onClick={() => handleSendMessage(invoice, 'follow-up')}
-                        className="flex-1 flex flex-col items-center justify-center gap-1 bg-transparent hover:bg-teal-50 focus:bg-teal-50 text-teal-700 hover:text-teal-800 border border-teal-700 hover:border-teal-800 px-4 py-2 rounded-lg min-h-10 transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-teal-700 border border-teal-700/40 rounded-lg hover:bg-teal-50 hover:border-opacity-30 transition-colors"
                       >
                         <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                        <span className="text-xs font-medium">Follow Up</span>
+                        Follow Up
                       </button>
                     </div>
                   )
@@ -578,20 +681,20 @@ const Dashboard = () => {
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleSendMessage(invoice, 'payment-reminder')}
-                      className="flex-1 flex flex-col items-center justify-center gap-1 bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
+                      className="flex-1 inline-flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 text-white px-4 py-2 rounded-lg min-h-10 transition-colors"
                     >
                       <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                      <span className="text-xs font-medium text-center">
+                      <span className="text-sm font-medium text-center">
                         Remind
                       </span>
                     </button>
                     <button 
                       onClick={() => handleMarkPaid(invoice.id)}
-                      className="flex-1 flex flex-col items-center justify-center gap-1 bg-transparent hover:bg-teal-50 focus:bg-teal-50 text-teal-700 hover:text-teal-800 border border-teal-700 hover:border-teal-800 px-4 py-2 rounded-lg min-h-10 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-teal-700 border border-teal-700/40 rounded-lg hover:bg-teal-50 hover:border-opacity-30 transition-colors"
                       title="Mark as Paid"
                     >
                       <CheckCircleIcon className="w-4 h-4" />
-                      <span className="text-xs font-medium">Mark Paid</span>
+                      Mark Paid
                     </button>
                   </div>
                 )}
@@ -600,6 +703,17 @@ const Dashboard = () => {
           })}
         </div>
       </main>
+
+      {/* Global Flying Dollar Animations */}
+      {flyingDollars.map(dollar => (
+        <div
+          key={dollar.id}
+          className="fixed top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center flying-dollar pointer-events-none"
+          style={{ backgroundColor: '#ff6b47', zIndex: 9999 }}
+        >
+          <span className="text-sm font-bold text-white">$</span>
+        </div>
+      ))}
 
       {/* Risk Action Plan Modal */}
       <RiskActionPlan 
