@@ -599,7 +599,21 @@ const Dashboard = () => {
                     <div className={`px-3 py-1 rounded text-xs font-medium w-32 text-left ${statusStyle.border} ${statusStyle.bg} ${statusStyle.text}`}>
                       <div>{statusStyle.label}</div>
                       {statusStyle.riskLabel && (
-                        <div className="mt-0.5 text-red-600 font-medium">{statusStyle.riskLabel}</div>
+                        <>
+                          <div className="mt-0.5 text-red-600 font-medium">{statusStyle.riskLabel}</div>
+                          {invoice.riskLevel === 'high' && (
+                            <button
+                              onClick={() => {
+                                setSelectedInvoice(invoice);
+                                setIsRiskModalOpen(true);
+                              }}
+                              className="text-xs text-teal-700 hover:text-teal-800 mt-1 block"
+                              title="Learn payment collection strategies"
+                            >
+                              Insights and tips
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -614,19 +628,6 @@ const Dashboard = () => {
                       </svg>
                       <span>Auto reminder sent {daysSinceNotification} days ago</span>
                     </p>
-                    {/* Educational Link for Late Risk customers */}
-                    {invoice.riskLevel === 'high' && (
-                      <button
-                        onClick={() => {
-                          setSelectedInvoice(invoice);
-                          setIsRiskModalOpen(true);
-                        }}
-                        className="text-xs text-teal-700 hover:text-teal-800 ml-5 mt-1 block"
-                        title="Learn payment collection strategies"
-                      >
-                        How to avoid late payments
-                      </button>
-                    )}
                   </div>
                 )}
 

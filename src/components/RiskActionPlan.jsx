@@ -65,7 +65,7 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
         {/* Header */}
         <div className="bg-teal-700 px-4 py-4 text-white flex-shrink-0">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-semibold">Late Payment Risk</h2>
+            <h2 className="text-lg font-semibold">Insights & Tips</h2>
             <button 
               onClick={onClose}
               className="p-1 hover:bg-teal-600 rounded-full transition-colors"
@@ -75,7 +75,6 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
               </svg>
             </button>
           </div>
-          <p className="text-base text-teal-100 mb-3 font-medium">Analysis • Actions • Next Steps</p>
           <div className="flex items-center gap-2">
             <span className="text-teal-100 text-sm">{invoice.customerName}</span>
             <span className="text-white font-semibold">${invoice.amount}</span>
