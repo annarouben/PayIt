@@ -20,7 +20,6 @@ const Dashboard = () => {
   const [recentlyPaidInvoices, setRecentlyPaidInvoices] = useState(new Set()); // Track recently paid invoices
   const [animatingInvoices, setAnimatingInvoices] = useState(new Set()); // Track invoices being animated
   const [recentlyMovedInvoices, setRecentlyMovedInvoices] = useState(new Set()); // Track invoices that just moved to paid section
-  const [flyingDollars, setFlyingDollars] = useState([]); // Track flying dollar animations
 
   const handleRiskClick = (invoice) => {
     setSelectedInvoice(invoice);
@@ -54,22 +53,8 @@ const Dashboard = () => {
   };
 
   const handleReviewLater = (invoiceId) => {
-    // Prevent duplicate animations if already animating
-    if (animatingInvoices.has(invoiceId)) {
-      return;
-    }
-    
     // Start animation
     setAnimatingInvoices(prev => new Set(prev).add(invoiceId));
-    
-    // Create flying dollar animation
-    const dollarId = Date.now() + Math.random(); // Unique ID for this dollar
-    setFlyingDollars(prev => [...prev, { id: dollarId, invoiceId }]);
-    
-    // Remove flying dollar after animation completes
-    setTimeout(() => {
-      setFlyingDollars(prev => prev.filter(dollar => dollar.id !== dollarId));
-    }, 1200); // Match flyDollarSign animation duration
     
     // After animation completes, mark invoice as paid and move it to paid section
     setTimeout(() => {
@@ -703,17 +688,6 @@ const Dashboard = () => {
           })}
         </div>
       </main>
-
-      {/* Global Flying Dollar Animations */}
-      {flyingDollars.map(dollar => (
-        <div
-          key={dollar.id}
-          className="fixed top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center flying-dollar pointer-events-none"
-          style={{ backgroundColor: '#ff6b47', zIndex: 9999 }}
-        >
-          <span className="text-sm font-bold text-white">$</span>
-        </div>
-      ))}
 
       {/* Risk Action Plan Modal */}
       <RiskActionPlan 
