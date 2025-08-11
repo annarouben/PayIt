@@ -91,15 +91,34 @@ const Dashboard = () => {
       // Add to recently moved set for slide-in animation
       setRecentlyMovedInvoices(prev => new Set(prev).add(invoiceId));
       
-      // Remove from recently moved after animation completes
+      // Remove from recently moved after slide-in animation
       setTimeout(() => {
         setRecentlyMovedInvoices(prev => {
           const newSet = new Set(prev);
           newSet.delete(invoiceId);
           return newSet;
         });
-      }, 400); // Match slide-in animation duration
-    }, 400); // Match CSS animation duration
+      }, 400);
+    }, 1200);
+  };
+
+  // Function to scroll to first invoice of a specific status
+  const scrollToStatus = (status) => {
+    const firstInvoiceOfStatus = sortedInvoices.find(invoice => {
+      if (status === 'overdue') return invoice.status === 'overdue';
+      if (status === 'dueSoon') return invoice.status === 'due';
+      if (status === 'paid') return invoice.status === 'paid';
+    });
+    
+    if (firstInvoiceOfStatus) {
+      const element = document.getElementById(`invoice-${firstInvoiceOfStatus.id}`);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }
   };
 
   const handleAskForReviewFromRecentlyPaid = (invoice) => {
@@ -493,17 +512,26 @@ const Dashboard = () => {
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Invoice Status</h2>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-red-500">
+            <div 
+              onClick={() => scrollToStatus('overdue')}
+              className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-red-500 cursor-pointer hover:shadow-md transition-shadow"
+            >
               <div className="text-2xl font-bold text-gray-900">{totals.overdue.count}</div>
               <div className="text-xs text-gray-600 mb-1">Overdue</div>
               <div className="text-sm font-semibold text-gray-900">${totals.overdue.amount.toLocaleString()}</div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-amber-500">
+            <div 
+              onClick={() => scrollToStatus('dueSoon')}
+              className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-amber-500 cursor-pointer hover:shadow-md transition-shadow"
+            >
               <div className="text-2xl font-bold text-gray-900">{totals.dueSoon.count}</div>
               <div className="text-xs text-gray-600 mb-1">Due Soon</div>
               <div className="text-sm font-semibold text-gray-900">${totals.dueSoon.amount.toLocaleString()}</div>
             </div>
-            <div className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-green-500">
+            <div 
+              onClick={() => scrollToStatus('paid')}
+              className="bg-white p-3 rounded-lg shadow-sm text-center border-l-4 border-green-500 cursor-pointer hover:shadow-md transition-shadow"
+            >
               <div className="text-2xl font-bold text-gray-900">{totals.paid.count}</div>
               <div className="text-xs text-gray-600 mb-1">Paid</div>
               <div className="text-sm font-semibold text-gray-900">${totals.paid.amount.toLocaleString()}</div>
@@ -524,7 +552,7 @@ const Dashboard = () => {
             const isRecentlyMoved = recentlyMovedInvoices.has(invoice.id);
             
             return (
-              <div key={invoice.id} className={`relative bg-white rounded-lg shadow-sm p-4 transition-all duration-500 ${
+              <div key={invoice.id} id={`invoice-${invoice.id}`} className={`relative bg-white rounded-lg shadow-sm p-4 transition-all duration-500 ${
                 isRecentlyPaid ? 'border-2 border-teal-200 bg-teal-50' : ''
               } ${isAnimating ? 'invoice-slide-out' : ''} ${isRecentlyMoved ? 'invoice-slide-in' : ''}`}>
                 <div className="flex justify-between items-start mb-3">

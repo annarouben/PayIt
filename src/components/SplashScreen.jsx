@@ -35,7 +35,7 @@ const SplashScreen = ({ onComplete }) => {
         </p>
 
         {/* Loading Animation */}
-        <div className="flex gap-3 animate-[fadeIn_1s_ease-out_1.2s_forwards] opacity-0 mb-8">
+        <div className="flex gap-3 animate-[fadeIn_1s_ease-out_1.2s_forwards] opacity-0 mb-6">
           <div className="w-6 h-6 rounded-full flex items-center justify-center animate-[bounce_1.4s_ease-in-out_infinite]" style={{backgroundColor: '#ff6b47'}}>
             <span className="text-xs font-bold text-white">$</span>
           </div>
@@ -46,12 +46,12 @@ const SplashScreen = ({ onComplete }) => {
             <span className="text-xs font-bold text-white">¥</span>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Branding - Always visible */}
-      <div className="text-center pb-6 sm:pb-8 animate-[fadeIn_1.5s_ease-out_1.5s_forwards] opacity-0">
-        <p className="text-xs text-gray-400 mb-1">Designed by</p>
-        <p className="text-sm font-medium text-gray-600">Anna Rouben</p>
+        {/* Branding - Close to currency circles */}
+        <div className="text-center animate-[fadeIn_1.5s_ease-out_1.5s_forwards] opacity-0">
+          <p className="text-xs text-gray-400 mb-1">Designed by</p>
+          <p className="text-sm font-medium text-gray-600">Anna Rouben</p>
+        </div>
       </div>
     </div>
   );
