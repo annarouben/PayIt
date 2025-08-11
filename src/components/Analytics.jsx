@@ -2,10 +2,48 @@ import React, { useState } from 'react';
 
 const Analytics = ({ onBack }) => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [tooltip, setTooltip] = useState({ show: false, month: '', days: 0, x: 0, y: 0 });
 
   const handleActionClick = () => {
     setShowDisclaimer(true);
     setTimeout(() => setShowDisclaimer(false), 3000);
+  };
+
+  const handleDataPointClick = (monthData, event) => {
+    if (!event || !event.currentTarget) {
+      console.error('Invalid event or currentTarget');
+      return;
+    }
+    
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log('Tooltip click:', monthData); // Debug log
+    
+    // Hide any existing tooltip first
+    setTooltip(prev => ({ ...prev, show: false }));
+    
+    // Get element position immediately (not in setTimeout)
+    const rect = event.currentTarget.getBoundingClientRect();
+    const tooltipData = {
+      show: true,
+      month: monthData.month,
+      days: monthData.avgDays,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 50
+    };
+    
+    console.log('Setting tooltip:', tooltipData); // Debug log
+    
+    // Small delay to ensure clean state, then show tooltip
+    setTimeout(() => {
+      setTooltip(tooltipData);
+    }, 10);
+    
+    // Hide tooltip after 3 seconds
+    setTimeout(() => {
+      setTooltip(prev => ({ ...prev, show: false }));
+    }, 3000);
   };
 
   // Mock data for key metrics (August 2024)
@@ -196,6 +234,8 @@ const Analytics = ({ onBack }) => {
           </div>
         )}
 
+
+
         {/* 6-Month Trends */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">6-Month Trends</h2>
@@ -248,11 +288,11 @@ const Analytics = ({ onBack }) => {
               <svg width="100%" height="128" viewBox="0 0 320 128" className="overflow-visible">
                 {/* Grid lines and Y-axis labels */}
                 {[0, 2, 4, 6].map((value) => {
-                  const yPos = 128 - 16 - (value / 6) * 96; // 16px bottom margin, 96px chart height
+                  const yPos = 128 - 20 - (value / 6) * 88; // 20px bottom margin, 88px chart height
                   return (
                     <g key={value}>
                       <line
-                        x1="40"
+                        x1="50"
                         y1={yPos}
                         x2="320"
                         y2={yPos}
@@ -260,7 +300,7 @@ const Analytics = ({ onBack }) => {
                         strokeWidth="1"
                       />
                       <text
-                        x="35"
+                        x="25"
                         y={yPos + 4}
                         fontSize="10"
                         fill="#6b7280"
@@ -280,32 +320,35 @@ const Analytics = ({ onBack }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   points={monthlyData.map((month, index) => {
-                    const x = 40 + (index / (monthlyData.length - 1)) * 280; // 40px left margin, 280px chart width
-                    const y = 128 - 16 - (month.avgDays / 6) * 96; // Same calculation as grid
+                    const x = 50 + (index / (monthlyData.length - 1)) * 270; // 50px left margin, 270px chart width
+                    const y = 128 - 20 - (month.avgDays / 6) * 88; // Same calculation as grid
                     return `${x},${y}`;
                   }).join(' ')}
                 />
                 
                 {/* Data points */}
                 {monthlyData.map((month, index) => {
-                  const x = 40 + (index / (monthlyData.length - 1)) * 280;
-                  const y = 128 - 16 - (month.avgDays / 6) * 96;
+                  const x = 50 + (index / (monthlyData.length - 1)) * 270;
+                  const y = 128 - 20 - (month.avgDays / 6) * 88;
                   return (
                     <circle
                       key={month.month}
                       cx={x}
                       cy={y}
-                      r="4"
+                      r="6"
                       fill="#0f766e"
                       stroke="white"
                       strokeWidth="2"
+                      className="cursor-pointer hover:r-8 hover:fill-teal-700 transition-all"
+                      onClick={(e) => handleDataPointClick(month, e)}
+                      style={{ cursor: 'pointer' }}
                     />
                   );
                 })}
                 
                 {/* X-axis labels */}
                 {monthlyData.map((month, index) => {
-                  const x = 40 + (index / (monthlyData.length - 1)) * 280;
+                  const x = 50 + (index / (monthlyData.length - 1)) * 270;
                   return (
                     <text
                       key={month.month}
@@ -324,6 +367,23 @@ const Analytics = ({ onBack }) => {
           </div>
         </div>
       </main>
+      
+      {/* Tooltip */}
+      {tooltip.show && (
+        <div 
+          className="fixed z-50 bg-teal-700 text-white text-xs px-3 py-2 rounded-lg shadow-xl pointer-events-none border border-teal-600"
+          style={{ 
+            left: `${tooltip.x}px`, 
+            top: `${tooltip.y}px`,
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div className="font-semibold">{tooltip.month}</div>
+          <div>{tooltip.days} days</div>
+          {/* Small arrow pointing down */}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-teal-700"></div>
+        </div>
+      )}
     </div>
   );
 };
