@@ -292,7 +292,7 @@ const Analytics = ({ onBack }) => {
                   return (
                     <g key={value}>
                       <line
-                        x1="50"
+                        x1="32"
                         y1={yPos}
                         x2="320"
                         y2={yPos}
@@ -300,11 +300,11 @@ const Analytics = ({ onBack }) => {
                         strokeWidth="1"
                       />
                       <text
-                        x="25"
+                        x="0"
                         y={yPos + 4}
-                        fontSize="10"
-                        fill="#6b7280"
-                        textAnchor="end"
+                        fontSize="12"
+                        fill="#4b5563"
+                        textAnchor="start"
                       >
                         {value}d
                       </text>
@@ -320,7 +320,7 @@ const Analytics = ({ onBack }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   points={monthlyData.map((month, index) => {
-                    const x = 50 + (index / (monthlyData.length - 1)) * 270; // 50px left margin, 270px chart width
+                    const x = 32 + (index / (monthlyData.length - 1)) * 288; // 32px left margin, 288px chart width
                     const y = 128 - 20 - (month.avgDays / 6) * 88; // Same calculation as grid
                     return `${x},${y}`;
                   }).join(' ')}
@@ -328,7 +328,7 @@ const Analytics = ({ onBack }) => {
                 
                 {/* Data points */}
                 {monthlyData.map((month, index) => {
-                  const x = 50 + (index / (monthlyData.length - 1)) * 270;
+                  const x = 32 + (index / (monthlyData.length - 1)) * 288;
                   const y = 128 - 20 - (month.avgDays / 6) * 88;
                   return (
                     <circle
@@ -348,14 +348,14 @@ const Analytics = ({ onBack }) => {
                 
                 {/* X-axis labels */}
                 {monthlyData.map((month, index) => {
-                  const x = 50 + (index / (monthlyData.length - 1)) * 270;
+                  const x = 32 + (index / (monthlyData.length - 1)) * 288;
                   return (
                     <text
                       key={month.month}
                       x={x}
                       y={128 - 4}
-                      fontSize="10"
-                      fill="#6b7280"
+                      fontSize="12"
+                      fill="#4b5563"
                       textAnchor="middle"
                     >
                       {month.month}
