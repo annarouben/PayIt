@@ -1,23 +1,39 @@
 import React, { useState } from 'react';
 
 const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
-  const [phoneNumber, setPhoneNumber] = useState(invoice?.customerPhone || '');
+  const [phoneNumber, setPhoneNumber] = useState(invoice?.customerPhone || '(305) 914-5970');
   const [customMessage, setCustomMessage] = useState('');
   const [useCustomMessage, setUseCustomMessage] = useState(false);
 
   if (!isOpen || !invoice) return null;
 
+  // Helper function to get first name from invoice data
+  const getFirstName = (invoice) => {
+    if (!invoice) return '';
+    return invoice.customerFirstName || '';
+  };
+
+  // Helper function to get display name in "First Initial. Last Name" format
+  const getCustomerDisplayName = (invoice) => {
+    if (!invoice || (!invoice.customerFirstName && !invoice.customerLastName)) return '';
+    if (!invoice.customerFirstName) return invoice.customerLastName;
+    if (!invoice.customerLastName) return invoice.customerFirstName;
+    const firstInitial = invoice.customerFirstName.charAt(0).toUpperCase();
+    return `${firstInitial}. ${invoice.customerLastName}`;
+  };
+
   // Message templates
   const getMessageTemplate = () => {
+    const firstName = getFirstName(invoice);
     switch (messageType) {
       case 'payment-reminder':
         if (invoice.notifications && invoice.notifications.length > 0) {
-          return `Hi ${invoice.customerName}, following up on your invoice for ${invoice.jobDescription} ($${invoice.amount}) which is ${invoice.status === 'overdue' ? `${invoice.daysOverdue} days overdue` : `due in ${invoice.daysDue} days`}. Please let me know if you have any questions. Thanks!`;
+          return `Hi ${firstName}, following up on your invoice for ${invoice.jobDescription} ($${invoice.amount}) which is ${invoice.status === 'overdue' ? `${invoice.daysOverdue} days overdue` : `due in ${invoice.daysDue} days`}. Please let me know if you have any questions. Thanks!`;
         }
-        return `Hi ${invoice.customerName}, friendly reminder that your invoice for ${invoice.jobDescription} ($${invoice.amount}) is ${invoice.status === 'overdue' ? `${invoice.daysOverdue} days overdue` : `due in ${invoice.daysDue} days`}. Thanks!`;
+        return `Hi ${firstName}, friendly reminder that your invoice for ${invoice.jobDescription} ($${invoice.amount}) is ${invoice.status === 'overdue' ? `${invoice.daysOverdue} days overdue` : `due in ${invoice.daysDue} days`}. Thanks!`;
       
       case 'review-request':
-        return `Hi ${invoice.customerName}, thanks for your payment on the ${invoice.jobDescription}! Would you mind leaving a quick Google review? It really helps our business: https://g.page/r/your-business-review-link Thanks!`;
+        return `Hi ${firstName}, thanks for your payment on the ${invoice.jobDescription}! Would you mind leaving a quick Google review? It really helps our business: https://g.page/r/your-business-review-link Thanks!`;
       
       default:
         return '';
@@ -106,7 +122,7 @@ const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
             </button>
           </div>
           <div className="flex items-center gap-2 text-teal-100">
-            <span className="text-sm">{invoice.customerName}</span>
+            <span className="font-semibold">{getCustomerDisplayName(invoice)}</span>
             <span className="text-white font-semibold">${invoice.amount}</span>
           </div>
         </div>
@@ -125,7 +141,6 @@ const MessageComposer = ({ invoice, messageType, isOpen, onClose, onSent }) => {
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="(555) 123-4567"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-600 focus:border-transparent"
-              autoFocus
               required
             />
           </div>

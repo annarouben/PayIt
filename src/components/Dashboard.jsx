@@ -8,6 +8,15 @@ import {
   StarIcon 
 } from '@heroicons/react/24/outline';
 
+// Utility function to get customer display name from first and last name
+const getCustomerDisplayName = (firstName, lastName) => {
+  if (!firstName && !lastName) return '';
+  if (!firstName) return lastName;
+  if (!lastName) return firstName;
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  return `${firstInitial}. ${lastName}`;
+};
+
 const Dashboard = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
@@ -130,7 +139,8 @@ const Dashboard = () => {
   const [invoices, setInvoices] = useState([
     {
       id: 1,
-      customerName: "Johnson",
+      customerFirstName: "Mike",
+      customerLastName: "Johnson",
       customerPhone: "(555) 123-4567",
       amount: 150,
       status: "overdue",
@@ -141,7 +151,8 @@ const Dashboard = () => {
     },
     {
       id: 2,
-      customerName: "Davis",
+      customerFirstName: "Sarah",
+      customerLastName: "Davis",
       customerPhone: "(555) 234-5678",
       amount: 320,
       status: "overdue",
@@ -152,7 +163,8 @@ const Dashboard = () => {
     },
     {
       id: 3,
-      customerName: "Smith",
+      customerFirstName: "John",
+      customerLastName: "Smith",
       customerPhone: "(555) 345-6789",
       amount: 275,
       status: "due",
@@ -167,7 +179,8 @@ const Dashboard = () => {
     },
     {
       id: 4,
-      customerName: "Brown",
+      customerFirstName: "Lisa",
+      customerLastName: "Brown",
       customerPhone: "(555) 456-7890",
       amount: 185,
       status: "due",
@@ -182,7 +195,8 @@ const Dashboard = () => {
     },
     {
       id: 5,
-      customerName: "Miller",
+      customerFirstName: "David",
+      customerLastName: "Miller",
       customerPhone: "(555) 567-8901",
       amount: 95,
       status: "due",
@@ -193,7 +207,8 @@ const Dashboard = () => {
     },
     {
       id: 6,
-      customerName: "Williams",
+      customerFirstName: "Anna",
+      customerLastName: "Williams",
       customerPhone: "(555) 678-9012",
       amount: 120,
       status: "paid",
@@ -204,7 +219,8 @@ const Dashboard = () => {
     },
     {
       id: 7,
-      customerName: "Wilson",
+      customerFirstName: "Robert",
+      customerLastName: "Wilson",
       customerPhone: "(555) 789-0123",
       amount: 450,
       status: "paid",
@@ -216,7 +232,8 @@ const Dashboard = () => {
     },
     {
       id: 8,
-      customerName: "Garcia",
+      customerFirstName: "Maria",
+      customerLastName: "Garcia",
       customerPhone: "(555) 890-1234",
       amount: 85,
       status: "paid",
@@ -227,7 +244,8 @@ const Dashboard = () => {
     },
     {
       id: 9,
-      customerName: "Martinez",
+      customerFirstName: "Carlos",
+      customerLastName: "Martinez",
       customerPhone: "(555) 901-2345",
       amount: 225,
       status: "paid",
@@ -272,90 +290,6 @@ const Dashboard = () => {
       })
     );
   };
-
-  // Sample invoice data - in real app this would come from an API/database
-  const invoicesOld = [
-    {
-      id: 1,
-      customerName: "Johnson",
-      amount: 150,
-      status: "overdue",
-      daysOverdue: 3,
-      jobDescription: "Kitchen sink repair"
-    },
-    {
-      id: 2,
-      customerName: "Davis",
-      amount: 320,
-      status: "overdue",
-      daysOverdue: 7,
-      jobDescription: "Water heater replacement"
-    },
-    {
-      id: 3,
-      customerName: "Smith",
-      amount: 275,
-      status: "due",
-      daysDue: 2,
-      jobDescription: "Bathroom plumbing",
-      riskLevel: "high",
-      notifications: [
-        { type: "auto", sent: "2025-08-06", message: "Early reminder sent (customer typically pays 3-5 days late)" }
-      ]
-    },
-    {
-      id: 4,
-      customerName: "Brown",
-      amount: 185,
-      status: "due",
-      daysDue: 5,
-      jobDescription: "Pipe leak repair",
-      riskLevel: "high",
-      notifications: [
-        { type: "auto", sent: "2025-08-05", message: "Proactive reminder sent (history of late payments)" }
-      ]
-    },
-    {
-      id: 5,
-      customerName: "Miller",
-      amount: 95,
-      status: "due",
-      daysDue: 1,
-      jobDescription: "Faucet replacement"
-    },
-    {
-      id: 6,
-      customerName: "Williams",
-      amount: 120,
-      status: "paid",
-      paidDate: "Today",
-      jobDescription: "Toilet installation"
-    },
-    {
-      id: 7,
-      customerName: "Wilson",
-      amount: 450,
-      status: "paid",
-      paidDate: "Yesterday",
-      jobDescription: "Full bathroom renovation"
-    },
-    {
-      id: 8,
-      customerName: "Garcia",
-      amount: 85,
-      status: "paid",
-      paidDate: "2 days ago",
-      jobDescription: "Garbage disposal fix"
-    },
-    {
-      id: 9,
-      customerName: "Martinez",
-      amount: 225,
-      status: "paid",
-      paidDate: "3 days ago",
-      jobDescription: "Shower installation"
-    }
-  ];
 
   // Function to get status styling based on invoice status
   const getStatusStyle = (invoice) => {
@@ -558,7 +492,7 @@ const Dashboard = () => {
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{invoice.customerName}</h4>
+                      <h4 className="font-semibold text-gray-900">{getCustomerDisplayName(invoice.customerFirstName, invoice.customerLastName)}</h4>
                     </div>
                     <p className="text-sm text-gray-600">{invoice.jobDescription}</p>
                     <p className="text-lg font-bold text-gray-900">${invoice.amount}</p>

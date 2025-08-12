@@ -1,5 +1,14 @@
 import React from 'react';
 
+// Utility function to get customer display name from first and last name
+const getCustomerDisplayName = (firstName, lastName) => {
+  if (!firstName && !lastName) return '';
+  if (!firstName) return lastName;
+  if (!lastName) return firstName;
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  return `${firstInitial}. ${lastName}`;
+};
+
 const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
   if (!isOpen || !invoice) return null;
 
@@ -47,7 +56,7 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
       }
     };
 
-    return riskProfiles[invoice.customerName] || riskProfiles['Smith'];
+    return riskProfiles[invoice.customerLastName] || riskProfiles['Smith'];
   };
 
   const riskData = getRiskAnalysis(invoice);
@@ -76,7 +85,7 @@ const RiskActionPlan = ({ invoice, isOpen, onClose }) => {
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-teal-100 text-sm">{invoice.customerName}</span>
+            <span className="text-teal-100 font-semibold">{getCustomerDisplayName(invoice.customerFirstName, invoice.customerLastName)}</span>
             <span className="text-white font-semibold">${invoice.amount}</span>
           </div>
         </div>
